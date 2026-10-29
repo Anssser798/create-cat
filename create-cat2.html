@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>create-cat</title>
+  <style>
+    :root {
+      --bg: #2b1a12;
+      --panel: #3a2519;
+      --card: #4a3123;
+      --line: #5e4030;
+      --txt: #f1e4d6;
+      --acc: #e0a85f
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--txt);
+      font: 14px/1.4 system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh
+    }
+
+    header {
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--line)
+    }
+
+    #logo {
+      color: var(--acc);
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none
+    }
+
+    main {
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch
+    }
+
+    .left {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      gap: 16px;
+      align-items: stretch
+    }
+
+    .side {
+      width: 240px;
+      flex: none;
+      overflow: auto
+    }
+
+    .side .box:first-child {
+      margin-top: 0
+    }
+
+    .stage {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #241510 center/cover no-repeat
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 600px;
+      display: block;
+      margin: auto
+    }
+
+    .stage {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #241510 center/cover no-repeat
+    }
+
+    .panel {
+      width: 440px;
+      max-width: 100%;
+      overflow: auto
+    }
+
+    .box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 12px
+    }
+
+    button,
+    select {
+      background: var(--card);
+      color: var(--txt);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 4px 9px;
+      cursor: pointer;
+      font: inherit
+    }
+
+    button:hover {
+      border-color: var(--acc)
+    }
+
+    button:disabled {
+      opacity: .4;
+      cursor: default
+    }
+
+    details {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 8px
+    }
+
+    summary {
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 600
+    }
+
+    summary span {
+      float: right;
+      opacity: .6;
+      font-weight: 400
+    }
+
+    .body {
+      padding: 0 10px 10px
+    }
+
+    .add {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px
+    }
+
+    .add select {
+      flex: 1
+    }
+
+    .layer {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 6px;
+      cursor: pointer
+    }
+
+    .layer.sel {
+      border-color: var(--acc)
+    }
+
+    .layer.over {
+      border-style: dashed
+    }
+
+    .lh {
+      display: flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .lh b {
+      flex: 1
+    }
+
+    .lh button {
+      padding: 1px 7px
+    }
+
+    .grip {
+      cursor: grab;
+      opacity: .6;
+      padding-right: 4px
+    }
+
+    .chip {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid #fff6;
+      display: inline-block
+    }
+
+    .op {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-top: 6px
+    }
+
+    .op input {
+      flex: 1
+    }
+
+    .op span {
+      width: 38px;
+      text-align: right
+    }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px
+    }
+
+    .sq {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 2px solid #0006;
+      cursor: pointer
+    }
+
+    .sq.on {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px var(--acc)
+    }
+
+    .grid.dim {
+      opacity: .35
+    }
+
+    .hint {
+      font-size: 12px;
+      opacity: .8
+    }
+
+    #code {
+      width: 100%;
+      background: #2b1a12;
+      color: var(--txt);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px;
+      margin: 6px 0;
+      font: 12px monospace
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    #msg {
+      font-size: 12px;
+      min-height: 16px;
+      margin-top: 4px;
+      color: var(--acc)
+    }
+
+    @media(max-width:900px) {
+      main {
+        flex-direction: column
+      }
+
+      .left {
+        flex-direction: column
+      }
+
+      .side {
+        width: 100%
+      }
+
+      .stage {
+        order: -1;
+        width: 100%
+      }
+
+      .panel {
+        width: 100%;
+        max-height: none
+      }
+
+      .sq.bg {
+        background-size: cover;
+        background-position: center
+      }
+
+      .sq.none {
+        background: #241510;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-style: normal;
+        opacity: .8
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header><a id="logo" href="#">create-cat</a></header>
+  <main>
+    <div class="left">
+      <div class="side">
+        <div class="box"><b id="pal-t">Палитра</b>
+          <div class="hint" id="pal-h"></div>
+          <div class="grid" id="pal-g"></div>
+        </div>
+        <div class="box"><b>Фон</b>
+          <div class="grid" id="bg-g"></div>
+        </div>
+        <div class="box">
+          <b>Кодирование</b>
+          <input id="code" placeholder="Вставьте код окраса сюда" spellcheck="false">
+          <div class="row">
+            <button id="b-copy">Копировать код</button><button id="b-link">Копировать ссылку</button>
+            <button id="b-png">Скачать PNG</button><button id="b-reset">Сбросить</button>
+          </div>
+          <div id="msg"></div>
+        </div>
+      </div>
+      <div class="stage" id="stage"><canvas id="cv"></canvas></div>
+    </div>
+    <div class="panel" id="parts"></div>
+  </main>
+
+  <script>
+    const CONFIG = {
+      logoHref: './',
+      canvas: { w: 800, h: 600 },
+      tint: 'flat',
+      linesOnTop: false,
+      opacity: { min: 20, max: 100, step: 5 },
+      maxColorsPerItem: 15,
+      defaultMax: 15,
+      UI_ORDER: [10, 12, 7, 9, 2, 1,],
+
+      BACKGROUNDS: [
+        { id: 1, name: 'Лес', src: 'cat/bg/2.jpg' },
+        { id: 2, name: 'Водопад', src: 'cat/bg/1.jpg' },
+      ],
+
+      PALETTES: {
+        main: [
+          { id: 0, name: 'Чёрный', hex: '#1f1e1e' },
+          { id: 1, name: 'Белый', hex: '#e6e6e6' },
+          { id: 2, name: 'Серый', hex: '#6C6C6C' },
+          { id: 3, name: 'Светло-серый', hex: '#BABABA' },
+          { id: 4, name: 'Красный', hex: '#CD8C3C' },
+          { id: 5, name: 'Песочный', hex: '#D2C396' },
+          { id: 6, name: 'Рыжий', hex: '#B38245' },
+          { id: 7, name: 'Коричневый', hex: '#654F34' },
+          { id: 8, name: 'Шоколад', hex: '#4D3C27' },
+          { id: 9, name: 'Кремовый', hex: '#B8A48C' }
+        ],
+        eyes: [
+          { id: 0, name: 'Голубой', hex: '#83B4B5' },
+          { id: 1, name: 'Ярко-голубой', hex: '#6DC6C8' },
+          { id: 2, name: 'Бирюзовый', hex: '#7FC6AB' },
+          { id: 3, name: 'Салатовый', hex: '#78926D' },
+          { id: 4, name: 'Зелёный', hex: '#4C6541' },
+          { id: 5, name: 'Жёлтый', hex: '#D7BD6B' },
+          { id: 6, name: 'Янтарный', hex: '#D7AA6B' },
+          { id: 7, name: 'Рыжий', hex: '#D49D4F' },
+          { id: 8, name: 'Глубокий синий', hex: '#1F3952' },
+          { id: 9, name: 'Сероватый синий', hex: '#60778D' },
+          { id: 10, name: 'Карие', hex: '#4F3527' },
+          { id: 11, name: 'Красные', hex: '#481E10' }
+        ],
+        nose: [
+          { id: 0, name: 'Светло-розовый', hex: '#E0C2B9' },
+          { id: 1, name: 'Розовый', hex: '#edbfbb' },
+          { id: 2, name: 'Серый', hex: '#8a8a8a' },
+          { id: 3, name: 'Чёрный', hex: '#353535' },
+          { id: 5, name: 'Красный', hex: '#4f312b' },
+          { id: 7, name: 'Лиловый', hex: '#695B54' },
+          { id: 6, name: 'Тёмно-красный', hex: '#54271A' },
+        ],
+
+      },
+
+      PARTS: [
+        {
+          id: 2, name: 'Туловище',
+          base:
+          {
+            variants: [
+              { id: 1, name: 'Туловище', line: 'cat/base/base/1.png', fill: 'cat/color/base/2.png' }
+            ]
+          },
+          items: [
+            { id: 1, name: 'Л-З лапа: пальцы', src: 'cat/color/detail/base/1.png' },
+            { id: 2, name: 'П-З лапа: пальцы ', src: 'cat/color/detail/base/2.png' },
+            { id: 3, name: 'Л-П лапа: пальцы', src: 'cat/color/detail/base/4.png' },
+            { id: 4, name: 'П-П лапа: пальцы', src: 'cat/color/detail/base/3.png' },
+
+            { id: 5, name: 'Л-З лапа: носочек', src: 'cat/color/detail/base/5.png' },
+            { id: 6, name: 'П-З лапа: носочек', src: 'cat/color/detail/base/6.png' },
+            { id: 7, name: 'Л-П лапа: носочек', src: 'cat/color/detail/base/7.png' },
+            { id: 8, name: 'П-П лапа: носочек', src: 'cat/color/detail/base/8.png' },
+
+            { id: 9, name: 'Л-З лапа: гольф', src: 'cat/color/detail/base/10.png' },
+            { id: 10, name: 'П-З лапа: гольф', src: 'cat/color/detail/base/11.png' },
+            { id: 11, name: 'Л-П лапа: гольф', src: 'cat/color/detail/base/12.png' },
+            { id: 12, name: 'П-П лапа: гольф', src: 'cat/color/detail/base/13.png' },
+
+            { id: 9, name: 'Л-З лапа: целиком', src: 'cat/color/detail/base/16.png' },
+            { id: 10, name: 'П-З лапа: целиком', src: 'cat/color/detail/base/17.png' },
+            { id: 11, name: 'Л-П лапа: целиком', src: 'cat/color/detail/base/14.png' },
+            { id: 12, name: 'П-П лапа: целиком', src: 'cat/color/detail/base/15.png' },
+
+            { id: 13, name: 'Л-З лапа: пятна', src: 'cat/color/detail/base/18.png' },
+            { id: 14, name: 'П-З лапа: пятна', src: 'cat/color/detail/base/19.png' },
+            { id: 15, name: 'Л-П лапа: пятна', src: 'cat/color/detail/base/20.png' },
+            { id: 16, name: 'П-П лапа: пятна', src: 'cat/color/detail/base/21.png' },
+
+            { id: 76, name: 'Л-З лапа: пятнышки', src: 'cat/color/detail/base/79.png' },
+            { id: 77, name: 'П-З лапа: пятнышки', src: 'cat/color/detail/base/78.png' },
+            { id: 78, name: 'Л-П лапа: пятнышки', src: 'cat/color/detail/base/80.png' },
+            { id: 79, name: 'П-П лапа: пятнышки', src: 'cat/color/detail/base/81.png' },
+
+            { id: 17, name: 'Л-З лапа: налёт', src: 'cat/color/detail/base/22.png' },
+            { id: 18, name: 'П-З лапа: налёт', src: 'cat/color/detail/base/23.png' },
+            { id: 19, name: 'Л-П лапа: налёт', src: 'cat/color/detail/base/24.png' },
+            { id: 20, name: 'П-П лапа: налёт', src: 'cat/color/detail/base/26.png' },
+            { id: 21, name: 'Л-П лапа: налёт сверху', src: 'cat/color/detail/base/25.png' },
+
+            { id: 22, name: 'Л-З лапа: ветвистые полосы', src: 'cat/color/detail/base/30.png' },
+            { id: 23, name: 'П-З лапа: ветвистые полосы', src: 'cat/color/detail/base/31.png' },
+            { id: 24, name: 'Л-П лапа: ветвистые полосы', src: 'cat/color/detail/base/32.png' },
+            { id: 25, name: 'П-П лапа: ветвистые полосы', src: 'cat/color/detail/base/33.png' },
+
+            { id: 26, name: 'Живот', src: 'cat/color/detail/base/34.png' },
+            { id: 29, name: 'Живот: пятна', src: 'cat/color/detail/base/37.png' },
+            { id: 36, name: 'Живот: полосы', src: 'cat/color/detail/base/44.png' },
+
+            { id: 27, name: 'Начало грудки', src: 'cat/color/detail/base/35.png' },
+            { id: 28, name: 'Целиком грудка', src: 'cat/color/detail/base/36.png' },
+            { id: 34, name: 'Полосы на начале грудки', src: 'cat/color/detail/base/42.png' },
+            { id: 37, name: 'Полосы на грудке', src: 'cat/color/detail/base/45.png' },
+            { id: 40, name: 'Пятно на грудке ', src: 'cat/color/detail/base/48.png' },
+            { id: 41, name: 'Пятна на грудке ', src: 'cat/color/detail/base/49.png' },
+            { id: 42, name: 'Воротничок ', src: 'cat/color/detail/base/50.png' },
+            { id: 39, name: 'Звёздочка на грудке', src: 'cat/color/detail/base/47.png' },
+
+            { id: 30, name: 'Л-З лапа: рваные полосы', src: 'cat/color/detail/base/38.png' },
+            { id: 31, name: 'П-З лапа: рваные полосы', src: 'cat/color/detail/base/39.png' },
+            { id: 32, name: 'Л-П лапа: рваные полосы', src: 'cat/color/detail/base/40.png' },
+            { id: 33, name: 'П-П лапа: рваные полосы', src: 'cat/color/detail/base/41.png' },
+
+            { id: 35, name: 'Полосы', src: 'cat/color/detail/base/43.png' },
+            { id: 73, name: 'Пятно на боку 1', src: 'cat/color/detail/base/75.png' },
+            { id: 74, name: 'Пятно на боку 2', src: 'cat/color/detail/base/76.png' },
+            { id: 75, name: 'Пятно на боку 3', src: 'cat/color/detail/base/77.png' },
+            { id: 38, name: 'Плечо', src: 'cat/color/detail/base/46.png' },
+
+            { id: 43, name: 'Морда: Пятна под глазами', src: 'cat/color/detail/base/51.png' },
+            { id: 50, name: 'Морда: подводка', src: 'cat/color/detail/base/52.png' },
+            { id: 51, name: 'Морда: пятно на правом глазу', src: 'cat/color/detail/base/53.png' },
+            { id: 52, name: 'Морда: пятно на левом глазу', src: 'cat/color/detail/base/54.png' },
+            { id: 53, name: 'Морда: пятна под глазами', src: 'cat/color/detail/base/55.png' },
+            { id: 54, name: 'Морда: веснушки', src: 'cat/color/detail/base/56.png' },
+            { id: 55, name: 'Морда: пятна', src: 'cat/color/detail/base/57.png' },
+            { id: 56, name: 'Морда: полосы', src: 'cat/color/detail/base/58.png' },
+            { id: 57, name: 'Морда: брови', src: 'cat/color/detail/base/59.png' },
+            { id: 58, name: 'Морда: нос', src: 'cat/color/detail/base/60.png' },
+            { id: 59, name: 'Морда: переносица', src: 'cat/color/detail/base/61.png' },
+            { id: 60, name: 'Морда: начало носа', src: 'cat/color/detail/base/62.png' },
+            { id: 61, name: 'Морда: губы', src: 'cat/color/detail/base/63.png' },
+            { id: 62, name: 'Морда: мордочка', src: 'cat/color/detail/base/64.png' },
+            { id: 63, name: 'Морда: ободок', src: 'cat/color/detail/base/65.png' },
+            { id: 64, name: 'Морда: пушистые пятна над глазами', src: 'cat/color/detail/base/66.png' },
+            { id: 65, name: 'Морда: пятно на лбу', src: 'cat/color/detail/base/67.png' },
+            { id: 66, name: 'Морда: левая часть', src: 'cat/color/detail/base/68.png' },
+            { id: 67, name: 'Морда: правая часть', src: 'cat/color/detail/base/69.png' },
+            { id: 68, name: 'Морда: пятнышко на подбородке', src: 'cat/color/detail/base/70.png' },
+            { id: 69, name: 'Морда: рысьи брови', src: 'cat/color/detail/base/71.png' },
+            { id: 70, name: 'Морда: звёздочка', src: 'cat/color/detail/base/72.png' },
+            { id: 71, name: 'Морда: расплывчатое пятно 1', src: 'cat/color/detail/base/73.png' },
+            { id: 72, name: 'Морда: расплывчатое пятно 2', src: 'cat/color/detail/base/74.png' },
+          ]
+
+        },
+        {
+          id: 7, name: 'Уши',
+          base: {
+            variants: [
+              { id: 1, name: 'Торчком', line: 'cat/base/ears/1.png', fill: 'cat/color/ears/1.png' },
+              { id: 2, name: 'Кёрл', line: 'cat/base/ears/2.png', fill: 'cat/color/ears/2.png' }]
+          },
+          items: [
+            { id: 1, name: 'Кисточки', line: 'cat/base/ears/kisty.png', src: 'cat/color/ears/kisty.png', requiresVariant: 1 },
+
+            { id: 2, name: 'Левое: целиком', src: 'cat/color/detail/ears1/1.png', requiresVariant: 1 },
+            { id: 3, name: 'Правое: целиком', src: 'cat/color/detail/ears1/2.png', requiresVariant: 1 },
+            { id: 4, name: 'Левое: целиком', src: 'cat/color/detail/ears2/1.png', requiresVariant: 2 },
+            { id: 5, name: 'Правое: целиком', src: 'cat/color/detail/ears2/2.png', requiresVariant: 2 },
+
+            { id: 6, name: 'Левое: кончик', src: 'cat/color/detail/ears1/4.png', requiresVariant: 1 },
+            { id: 7, name: 'Правое: кончик', src: 'cat/color/detail/ears1/3.png', requiresVariant: 1 },
+            { id: 8, name: 'Левое: кончик', src: 'cat/color/detail/ears2/3.png', requiresVariant: 2 },
+            { id: 9, name: 'Правое: кончик', src: 'cat/color/detail/ears2/4.png', requiresVariant: 2 },
+
+            { id: 10, name: 'Левое: половина', src: 'cat/color/detail/ears1/5.png', requiresVariant: 1 },
+            { id: 11, name: 'Правое: половина', src: 'cat/color/detail/ears1/6.png', requiresVariant: 1 },
+            { id: 12, name: 'Левое: половина', src: 'cat/color/detail/ears2/5.png', requiresVariant: 2 },
+            { id: 13, name: 'Правое: половина', src: 'cat/color/detail/ears2/6.png', requiresVariant: 2 },
+
+            { id: 14, name: 'Левое: ободок', src: 'cat/color/detail/ears1/7.png', requiresVariant: 1 },
+            { id: 15, name: 'Правое: ободок', src: 'cat/color/detail/ears1/8.png', requiresVariant: 1 },
+            { id: 16, name: 'Левое: ободок', src: 'cat/color/detail/ears2/7.png', requiresVariant: 2 },
+            { id: 17, name: 'Правое: ободок', src: 'cat/color/detail/ears2/8.png', requiresVariant: 2 },
+
+            { id: 18, name: 'Левое: шерсть в ухе', src: 'cat/color/detail/ears1/9.png', requiresVariant: 1 },
+            { id: 19, name: 'Правое: шерсть в ухе', src: 'cat/color/detail/ears1/10.png', requiresVariant: 1 },
+            { id: 20, name: 'Левое: шерсть в ухе', src: 'cat/color/detail/ears2/9.png', requiresVariant: 2 },
+            { id: 21, name: 'Правое: шерсть в ухе', src: 'cat/color/detail/ears2/10.png', requiresVariant: 2 },
+
+            { id: 22, name: 'Левое: внутренность уха', src: 'cat/color/detail/ears1/12.png', requiresVariant: 1 },
+            { id: 23, name: 'Правое: внутренность уха', src: 'cat/color/detail/ears1/11.png', requiresVariant: 1 },
+
+            { id: 24, name: 'Левое: пятнышки', src: 'cat/color/detail/ears1/13.png', requiresVariant: 1 },
+            { id: 25, name: 'Правое: пятнышки', src: 'cat/color/detail/ears1/14.png', requiresVariant: 1 },
+            { id: 26, name: 'Левое: пятнышки', src: 'cat/color/detail/ears2/11.png', requiresVariant: 2 },
+            { id: 27, name: 'Правое: пятнышки', src: 'cat/color/detail/ears2/12.png', requiresVariant: 2 },
+
+            { id: 28, name: 'Левое: пятна', src: 'cat/color/detail/ears1/15.png', requiresVariant: 1 },
+            { id: 29, name: 'Правое: пятна', src: 'cat/color/detail/ears1/16.png', requiresVariant: 1 },
+            { id: 30, name: 'Левое: пятна', src: 'cat/color/detail/ears2/13.png', requiresVariant: 2 },
+            { id: 31, name: 'Правое: пятна', src: 'cat/color/detail/ears2/14.png', requiresVariant: 2 },
+
+            { id: 32, name: 'Левое: полосы', src: 'cat/color/detail/ears1/17.png', requiresVariant: 1 },
+            { id: 33, name: 'Правое: полосы', src: 'cat/color/detail/ears1/18.png', requiresVariant: 1 },
+            { id: 34, name: 'Левое: полосы', src: 'cat/color/detail/ears2/15.png', requiresVariant: 2 },
+            { id: 35, name: 'Правое: полосы', src: 'cat/color/detail/ears2/16.png', requiresVariant: 2 },
+          ]
+        },
+        {
+          id: 9, name: 'Щёки',
+          base: {
+            variants: [
+              { id: 1, name: 'Без щёк', line: 'cat/base/cheek/3.png', fill: 'cat/color/cheek/3.png' },
+              { id: 2, name: 'Щёки', line: 'cat/base/cheek/1.png', fill: 'cat/color/cheek/1.png' },
+            ]
+          },
+          items: [
+            { id: 1, name: 'Левое: целиком', src: 'cat/color/detail/cheek1/1.png', requiresVariant: 2 },
+            { id: 2, name: 'Правое: целиком', src: 'cat/color/detail/cheek1/2.png', requiresVariant: 2 },
+            { id: 3, name: 'Левое: пятнышки', src: 'cat/color/detail/cheek1/3.png', requiresVariant: 2 },
+            { id: 4, name: 'Правое: пятнышки', src: 'cat/color/detail/cheek1/4.png', requiresVariant: 2 },
+            { id: 5, name: 'Левое: пятна', src: 'cat/color/detail/cheek1/5.png', requiresVariant: 2 },
+            { id: 6, name: 'Правое: пятна', src: 'cat/color/detail/cheek1/6.png', requiresVariant: 2 },
+            { id: 7, name: 'Левое: полосы', src: 'cat/color/detail/cheek1/7.png', requiresVariant: 2 },
+            { id: 8, name: 'Правое: полосы', src: 'cat/color/detail/cheek1/8.png', requiresVariant: 2 },
+          ]
+        },
+        {
+          id: 10, name: 'Глаза', palette: 'eyes', max: 2,
+          base: {
+            variants: [
+              { id: 1, name: 'Глаза', line: 'cat/base/base/2.png', fill: 'cat/color/eyes/1.png' }
+            ]
+          },
+          items: [{ id: 1, name: 'Оттенок', src: 'cat/color/eyes/1.png' }]
+        },
+        {
+          id: 1, name: 'Хвост',
+          base: {
+            variants: [
+              { id: 1, name: 'Тонкий', line: 'cat/base/tail/1.png', fill: 'cat/color/tail/1.png' },
+              { id: 2, name: 'Короткий', line: 'cat/base/tail/2.png', fill: 'cat/color/tail/2.png' },
+              { id: 3, name: 'Пушистый', line: 'cat/base/tail/3.png', fill: 'cat/color/tail/3.png' }]
+          },
+          items: [
+            { id: 1, name: 'Кончик', src: 'cat/color/detail/tail 1/1.png', requiresVariant: 1 },
+            { id: 2, name: 'Кончик', src: 'cat/color/detail/tail 2/1.png', requiresVariant: 2 },
+            { id: 3, name: 'Кончик', src: 'cat/color/detail/tail 3/2.png', requiresVariant: 3 },
+
+            { id: 4, name: 'Полностью', src: 'cat/color/detail/tail 1/2.png', requiresVariant: 1 },
+            { id: 5, name: 'Полностью', src: 'cat/color/detail/tail 2/2.png', requiresVariant: 2 },
+            { id: 6, name: 'Полностью', src: 'cat/color/detail/tail 3/1.png', requiresVariant: 3 },
+
+            { id: 7, name: 'Ремень', src: 'cat/color/detail/tail 1/3.png', requiresVariant: 1 },
+            { id: 8, name: 'Ремень', src: 'cat/color/detail/tail 2/3.png', requiresVariant: 2 },
+            { id: 9, name: 'Ремень', src: 'cat/color/detail/tail 3/4.png', requiresVariant: 3 },
+
+            { id: 10, name: 'Середина ремня', src: 'cat/color/detail/tail 1/4.png', requiresVariant: 1 },
+            { id: 11, name: 'Середина ремня', src: 'cat/color/detail/tail 2/9.png', requiresVariant: 2 },
+            { id: 12, name: 'Середина ремня', src: 'cat/color/detail/tail 3/3.png', requiresVariant: 3 },
+
+            { id: 13, name: 'Низ', src: 'cat/color/detail/tail 1/5.png', requiresVariant: 1 },
+            { id: 14, name: 'Низ', src: 'cat/color/detail/tail 2/4.png', requiresVariant: 2 },
+            { id: 15, name: 'Низа нет', src: 'cat/color/detail/tail 3/.png', requiresVariant: 3 },
+
+            { id: 16, name: 'Пятна', src: 'cat/color/detail/tail 1/6.png', requiresVariant: 1 },
+            { id: 17, name: 'Пятна', src: 'cat/color/detail/tail 2/6.png', requiresVariant: 2 },
+            { id: 18, name: 'Пятна', src: 'cat/color/detail/tail 3/7.png', requiresVariant: 3 },
+
+            { id: 19, name: 'Пятнышки', src: 'cat/color/detail/tail 1/7.png', requiresVariant: 1 },
+            { id: 20, name: 'Пятнышки', src: 'cat/color/detail/tail 2/5.png', requiresVariant: 2 },
+            { id: 21, name: 'Пятнышки', src: 'cat/color/detail/tail 3/6.png', requiresVariant: 3 },
+
+            { id: 22, name: 'Полосы', src: 'cat/color/detail/tail 1/8.png', requiresVariant: 1 },
+            { id: 23, name: 'Полосы', src: 'cat/color/detail/tail 2/7.png', requiresVariant: 2 },
+            { id: 24, name: 'Полосы', src: 'cat/color/detail/tail 3/8.png', requiresVariant: 3 },
+
+            { id: 25, name: 'Налёт', src: 'cat/color/detail/tail 1/9.png', requiresVariant: 1 },
+            { id: 26, name: 'Налёт', src: 'cat/color/detail/tail 2/8.png', requiresVariant: 2 },
+            { id: 27, name: 'Налёт', src: 'cat/color/detail/tail 3/5.png', requiresVariant: 3 },
+
+
+          ]
+        },
+        {
+          id: 12, name: 'Нос', palette: 'nose',
+          base: {
+            variants: [
+              { id: 1, name: 'Нос', line: 'cat/base/base/3.png', fill: 'cat/color/base/3.png' },
+            ]
+          },
+          items: [
+            { id: 1, name: 'Правая часть', src: 'cat/color/detail/nose/1.png' },
+            { id: 3, name: 'Левая часть', src: 'cat/color/detail/nose/1.png' },
+            { id: 2, name: 'Пятна 1', src: 'cat/color/detail/nose/1.png' },
+            { id: 4, name: 'Пятна 2', src: 'cat/color/detail/nose/1.png' },
+            { id: 5, name: 'Веснушки', src: 'cat/color/detail/nose/1.png' },
+
+          ],
+        },
+
+      ]
+    };
+
+
+    const $ = s => document.querySelector(s);
+    const { w: W, h: H } = CONFIG.canvas, OP = CONFIG.opacity, PARTS = CONFIG.PARTS;
+    const P = Object.fromEntries(PARTS.map(p => [p.id, p]));
+    const UI_PARTS = [
+      ...(CONFIG.UI_ORDER || []).map(id => P[id]).filter(Boolean),
+      ...PARTS.filter(p => !(CONFIG.UI_ORDER || []).includes(p.id))
+    ];
+    const PAL = {};
+    for (const k in CONFIG.PALETTES) PAL[k] = Object.fromEntries(CONFIG.PALETTES[k].map(c => [c.id, c]));
+    const palOf = p => PAL[p.palette || 'main'];
+    const hexOf = (p, id) => palOf(p)[id].hex;
+    const maxOf = p => p.max ?? CONFIG.defaultMax;
+    const itemOf = (p, id) => (p.items || []).find(i => i.id === id);
+    const varOf = (p, id) => p.base.variants.find(v => v.id === id);
+    const colorsOf = (p, thing) => (thing.colors || p.colors || Object.keys(palOf(p)).map(Number))
+      .filter(id => palOf(p)[id]).slice(0, CONFIG.maxColorsPerItem);
+
+    const cv = $('#cv'), ctx = cv.getContext('2d');
+    cv.width = W; cv.height = H; $('#logo').href = CONFIG.logoHref;
+    let state = {}, sel = null;
+    const open = new Set(); let drag = null;
+    const CACHE_KEY = 'create-cat:last';
+    const save = () => { try { localStorage.setItem(CACHE_KEY, encode()); } catch (e) { } };
+    const defBase = p => { const v = p.base.variants[0]; return { v: v.id, color: colorsOf(p, v)[0] }; };
+    const blank = () => Object.fromEntries(PARTS.map(p => [p.id, { base: p.base ? defBase(p) : null, items: [] }]));
+    function purge(ns) {
+      for (const p of PARTS) {
+        const s = ns[p.id];
+        s.items = s.items.filter((l, _, arr) => {
+          const it = itemOf(p, l.item);
+          return (!it.requires || arr.some(x => x.item === it.requires)) && (!it.requiresVariant || (s.base && s.base.v === it.requiresVariant));
+        });
+      }
+      return ns;
+    }
+    const resetState = () => { state = blank(); sel = null; };
+    const newLayer = (p, it) => ({ item: it.id, color: colorsOf(p, it)[0], op: 100 });
+    const selThing = () => {
+      if (!sel) return null; const p = P[sel.p], s = state[p.id];
+      if (sel.k < 0) return { p, thing: varOf(p, s.base.v), obj: s.base, name: 'Основа' };
+      const l = s.items[sel.k]; return l ? { p, thing: itemOf(p, l.item), obj: l, name: itemOf(p, l.item).name } : null;
+    };
+    const imgs = {}, tints = {};
+    function img(src) {
+      if (!imgs[src]) {
+        const i = new Image();
+        i.onload = () => { i.ok = 1; draw(); };
+        i.onerror = () => { i.bad = 1; console.warn('Не найден файл:', src); renderPanel(); };
+        i.src = src; imgs[src] = i;
+      }
+      return imgs[src];
+    }
+    const clips = {};
+    function clipFor(p, it) {
+      if (p.clip === false || it.clip === false) return null;
+      const ids = it.clipTo || p.clipTo || (p.base ? [p.id] : []);
+      const srcs = ids.map(id => P[id] && P[id].base ? varOf(P[id], state[id].base.v).fill : null).filter(Boolean);
+      if (!srcs.length) return null;
+      const ims = srcs.map(img);
+      if (ims.some(i => !i.ok)) return null;
+      if (ims.length === 1) return ims[0];
+      const key = srcs.join('+');
+      if (!clips[key]) {
+        const c = document.createElement('canvas'); c.width = W; c.height = H;
+        const g = c.getContext('2d'); ims.forEach(i => g.drawImage(i, 0, 0, W, H));
+        c.src = key; clips[key] = c;
+      }
+      return clips[key];
+    }
+    function tint(im, hex, mk) {
+      const key = im.src + '|' + hex + '|' + (mk ? mk.src : ''); if (tints[key]) return tints[key];
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      if (CONFIG.tint === 'flat') { x.fillStyle = hex; x.fillRect(0, 0, W, H); }
+      else {
+        x.drawImage(im, 0, 0, W, H);
+        x.globalCompositeOperation = CONFIG.tint; x.fillStyle = hex; x.fillRect(0, 0, W, H);
+      }
+      x.globalCompositeOperation = 'destination-in';
+      x.drawImage(im, 0, 0, W, H);
+      if (mk) x.drawImage(mk, 0, 0, W, H);
+      return tints[key] = c;
+    }
+    function drawT(src, hex, a, mk) { const im = img(src); if (!im.ok) return; ctx.globalAlpha = a; ctx.drawImage(tint(im, hex, mk), 0, 0); }
+    function drawL(src) { const im = img(src); if (!im.ok) return; ctx.globalAlpha = 1; ctx.drawImage(im, 0, 0, W, H); }
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of PARTS) {
+        const s = state[p.id], v = p.base && varOf(p, s.base.v);
+        if (v) drawT(v.fill, hexOf(p, s.base.color), 1);
+        for (const l of [...s.items].reverse()) {
+          const it = itemOf(p, l.item);
+          drawT(it.src, hexOf(p, l.color), l.op / 100, clipFor(p, it));
+          if (it.line) drawL(it.line, l.op / 100);
+        }
+        if (v && !CONFIG.linesOnTop) drawL(v.line);
+      }
+      if (CONFIG.linesOnTop) for (const p of PARTS) if (p.base) drawL(varOf(p, state[p.id].base.v).line);
+      ctx.globalAlpha = 1;
+    }
+
+    function encode() {
+      const bp = PARTS.filter(p => p.base), b = [2, bp.length];
+      for (const p of bp) { const s = state[p.id].base; b.push(p.id, s.v, s.color); }
+      for (const p of PARTS) {
+        const L = state[p.id].items; if (!L.length) continue;
+        b.push(p.id, L.length); for (const l of L) b.push(l.item, l.color, l.op);
+      }
+      return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function decode(str) {
+      try {
+        const b = [...atob(str.trim().replace(/-/g, '+').replace(/_/g, '/'))].map(c => c.charCodeAt(0));
+        if (b[0] !== 2) return false;
+        const ns = blank(); let i = 2;
+        for (let j = 0; j < b[1]; j++, i += 3) {
+          if (i + 3 > b.length) return false;
+          const p = P[b[i]], v = p && p.base && varOf(p, b[i + 1]); if (!v) continue;
+          const cs = colorsOf(p, v); ns[p.id].base = { v: v.id, color: cs.includes(b[i + 2]) ? b[i + 2] : cs[0] };
+        }
+        while (i < b.length) {
+          const p = P[b[i]], n = b[i + 1]; i += 2;
+          if (n === undefined || i + n * 3 > b.length) return false;
+          for (let j = 0; j < n; j++, i += 3) {
+            const it = p && itemOf(p, b[i]);
+            if (!it || ns[p.id].items.length >= maxOf(p)) continue;
+            const cs = colorsOf(p, it);
+            ns[p.id].items.push({
+              item: it.id, color: cs.includes(b[i + 1]) ? b[i + 1] : cs[0],
+              op: Math.min(OP.max, Math.max(OP.min, b[i + 2]))
+            });
+          }
+        }
+        state = purge(ns); sel = null; return true;
+      } catch (e) { return false; }
+    }
+
+    const warn = srcs => srcs.some(s => imgs[s]?.bad) ? ' ⚠' : '';
+    function renderPanel() {
+      $('#parts').innerHTML = UI_PARTS.map(p => {
+        const s = state[p.id], L = s.items, mx = maxOf(p);
+        const isSel = k => sel && sel.p === p.id && sel.k === k ? ' sel' : '';
+        let html = '';
+        if (p.base) {
+          const v = varOf(p, s.base.v);
+          html += `<div class="layer${isSel(-1)}" data-p="${p.id}" data-k="-1"><div class="lh">
+        <b>Основа${warn([v.line, v.fill])}</b>
+        ${p.base.variants.length > 1 ? `<select data-a="var">${p.base.variants.map(x => `<option value="${x.id}"${x.id === v.id ? ' selected' : ''}>${x.name}</option>`).join('')}</select>` : ''}
+        <i class="chip" style="background:${hexOf(p, s.base.color)}"></i></div></div>`;
+        }
+        if (p.items && p.items.length) {
+          const ok = i => !(i.requires && !L.some(l => l.item === i.requires))
+            && !(i.requiresVariant && (!s.base || s.base.v !== i.requiresVariant));
+          const av = p.items.filter(ok);
+          const opts = av.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+          if (av.length) html += `<div class="add"><select>${opts}</select><button data-a="add" data-p="${p.id}"${L.length >= mx ? ' disabled' : ''}>+</button></div>`;
+
+          html += L.map((l, k) => {
+            const it = itemOf(p, l.item);
+            return `<div class="layer${isSel(k)}" data-p="${p.id}" data-k="${k}">
+          <div class="lh" draggable="true"><span class="grip">⠿</span><b>${it.name}${warn([it.src, it.line])}</b>
+            <i class="chip" style="background:${hexOf(p, l.color)}"></i>
+            <button data-a="up" title="Выше">▲</button><button data-a="down" title="Ниже">▼</button><button data-a="del" title="Убрать">✕</button></div>
+          <label class="op">Непрозрачность <input type="range" data-a="op" min="${OP.min}" max="${OP.max}" step="${OP.step}" value="${l.op}"><span>${l.op}%</span></label></div>`;
+          }).join('');
+        }
+
+        return `<details data-p="${p.id}"${open.has(p.id) ? ' open' : ''}><summary>${p.name}<span>${p.items && p.items.length ? L.length + ' / ' + mx : ''}</span></summary><div class="body">${html}</div></details>`;
+      }).join('');
+    }
+    function renderPalette() {
+      const t = selThing(), g = $('#pal-g');
+      if (!t) {
+        $('#pal-t').textContent = 'Палитра'; $('#pal-h').textContent = '';
+        g.className = 'grid dim'; g.innerHTML = CONFIG.PALETTES.main.map(c => `<i class="sq" title="${c.name}" style="background:${c.hex}"></i>`).join('');
+        return;
+      }
+      $('#pal-t').textContent = (CONFIG.PALETTE_TITLES || {})[t.p.palette || 'main'] || 'Палитра';
+      $('#pal-h').textContent = t.p.name + ': ' + t.name;
+      g.className = 'grid';
+      g.innerHTML = colorsOf(t.p, t.thing).map(id => {
+        const c = palOf(t.p)[id];
+        return `<i class="sq${id === t.obj.color ? ' on' : ''}" data-c="${id}" title="${c.name}" style="background:${c.hex}"></i>`;
+      }).join('');
+    }
+    function sync(fromCode) {
+      if (sel && !selThing()) sel = null;
+      draw(); renderPanel(); renderPalette();
+      if (!fromCode) $('#code').value = encode();
+      save();
+    }
+    function setSel(p, k) {
+      sel = { p, k };
+      document.querySelectorAll('.layer').forEach(el => el.classList.toggle('sel', +el.dataset.p === p && +el.dataset.k === k));
+      renderPalette();
+    }
+    const say = t => $('#msg').textContent = t;
+    const move = (arr, a, b) => { if (b < 0 || b >= arr.length) return; arr.splice(b, 0, arr.splice(a, 1)[0]); };
+
+    $('#pal-g').addEventListener('click', e => {
+      const t = selThing(); if (!t) return say('Сначала выберите элемент справа');
+      const c = e.target.dataset.c; if (c === undefined) return;
+      t.obj.color = +c; say(''); sync();
+    });
+    $('#parts').addEventListener('click', e => {
+      const a = e.target.dataset.a;
+      if (a === 'add') {
+        const p = P[e.target.dataset.p], L = state[p.id].items, it = itemOf(p, +e.target.previousElementSibling.value);
+        if (L.length >= maxOf(p) || !it) return;
+        L.unshift(newLayer(p, it)); sel = { p: p.id, k: 0 }; return sync();
+      }
+      const el = e.target.closest('.layer'); if (!el) return;
+      const p = P[el.dataset.p], k = +el.dataset.k, L = state[p.id].items;
+      if (a === 'up') { move(L, k, k - 1); sel = { p: p.id, k: Math.max(0, k - 1) }; return sync(); }
+      if (a === 'down') { move(L, k, k + 1); sel = { p: p.id, k: Math.min(L.length - 1, k + 1) }; return sync(); }
+      if (a === 'del') { L.splice(k, 1); purge(state); sel = null; return sync(); }
+      setSel(p.id, k);
+    });
+    $('#parts').addEventListener('change', e => {
+      if (e.target.dataset.a !== 'var') return;
+      const p = P[e.target.closest('.layer').dataset.p], s = state[p.id].base, v = varOf(p, +e.target.value);
+      s.v = v.id; if (!colorsOf(p, v).includes(s.color)) s.color = colorsOf(p, v)[0];
+      purge(state); sel = { p: p.id, k: -1 }; sync();
+    });
+    $('#parts').addEventListener('input', e => {
+      if (e.target.dataset.a !== 'op') return;
+      const el = e.target.closest('.layer');
+      state[el.dataset.p].items[+el.dataset.k].op = +e.target.value;
+      e.target.nextElementSibling.textContent = e.target.value + '%';
+      draw(); $('#code').value = encode(); save();
+    });
+    $('#parts').addEventListener('toggle', e => { const id = +e.target.dataset.p; e.target.open ? open.add(id) : open.delete(id); }, true);
+
+    $('#parts').addEventListener('dragstart', e => {
+      const el = e.target.closest('.layer'); if (!el) return;
+      drag = { p: el.dataset.p, k: +el.dataset.k }; e.dataTransfer.effectAllowed = 'move';
+    });
+    $('#parts').addEventListener('dragover', e => {
+      const el = e.target.closest('.layer');
+      document.querySelectorAll('.over').forEach(x => x.classList.remove('over'));
+      if (drag && el && el.dataset.p === drag.p && +el.dataset.k >= 0) { e.preventDefault(); el.classList.add('over'); }
+    });
+    $('#parts').addEventListener('drop', e => {
+      const el = e.target.closest('.layer');
+      if (drag && el && el.dataset.p === drag.p && +el.dataset.k >= 0) {
+        const to = +el.dataset.k; move(state[drag.p].items, drag.k, to); sel = { p: +drag.p, k: to }; drag = null; sync();
+      }
+    });
+    $('#parts').addEventListener('dragend', () => { drag = null; renderPanel(); });
+
+    $('#code').addEventListener('input', e => {
+      const v = e.target.value.trim(); if (!v) return;
+      if (decode(v)) { say('Окрас загружен ✓'); sync(true); } else say('Не удалось прочитать код');
+    });
+    const copy = (t, m) => navigator.clipboard.writeText(t).then(() => say(m), () => say(''));
+    $('#b-copy').onclick = () => copy(encode(), 'Код скопирован');
+    $('#b-link').onclick = () => copy(location.origin + location.pathname + '#c=' + encode(), 'Ссылка скопирована');
+    $('#b-reset').onclick = () => { resetState(); say(''); sync(); };
+    $('#b-png').onclick = () => { const a = document.createElement('a'); a.download = 'cat.png'; a.href = cv.toDataURL(); a.click(); };
+
+    const BG_KEY = 'create-cat:bg'; let bg = 0;
+    try { bg = +localStorage.getItem(BG_KEY) || 0; } catch (_) { }
+    function renderBg() {
+      const list = CONFIG.BACKGROUNDS || [], cur = list.find(b => b.id === bg);
+      if (!cur) bg = 0;
+      $('#stage').style.backgroundImage = cur ? `url("${cur.src}")` : 'none';
+      $('#bg-g').innerHTML = `<i class="sq none${bg === 0 ? ' on' : ''}" data-b="0" title="Без фона">✕</i>` +
+        list.map(b => `<i class="sq bg${b.id === bg ? ' on' : ''}" data-b="${b.id}" title="${b.name}" style="background-image:url('${b.src}')"></i>`).join('');
+    }
+    $('#bg-g').addEventListener('click', e => {
+      const b = e.target.dataset.b; if (b === undefined) return;
+      bg = +b; try { localStorage.setItem(BG_KEY, bg); } catch (_) { }
+      renderBg();
+    });
+
+    PARTS.forEach(p => { (p.items || []).forEach(i => img(i.src)); if (p.base) p.base.variants.forEach(v => { img(v.line); img(v.fill); }); });
+    resetState();
+    let saved = null; try { saved = localStorage.getItem(CACHE_KEY); } catch (e) { }
+    if (location.hash.startsWith('#c=') && decode(location.hash.slice(3))) say('Окрас загружен');
+    else if (saved && decode(saved)) say('Восстановлен последний окрас');
+    renderBg();
+    sync();
+  </script>
+</body>
+
+</html>
